@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "name": "mgrcd-io-fsa",
+  "version": "0.0.0",
+  "description": "Magia Record resource IO for File System Access API",
+  "license": "MPL-2.0"
+}

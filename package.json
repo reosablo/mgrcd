@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "name": "mgrcd",
+  "workspaces": [
+    "packages/*"
+  ]
+}

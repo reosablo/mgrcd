@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "name": "react-use-cache",
+  "version": "0.0.0",
+  "description": "React custom hook library to load anything with cache",
+  "license": "ISC"
+}
