@@ -2,5 +2,9 @@
   "name": "mgrcd-resource",
   "version": "0.0.0",
   "description": "Magia Record resource data",
-  "license": "MPL-2.0"
+  "license": "MPL-2.0",
+  "types": "./types",
+  "files": [
+    "./types"
+  ]
 }
