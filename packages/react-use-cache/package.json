@@ -3,5 +3,20 @@
   "name": "react-use-cache",
   "version": "0.0.0",
   "description": "React custom hook library to load anything with cache",
-  "license": "ISC"
+  "license": "ISC",
+  "main": "./dist",
+  "files": [
+    "./dist"
+  ],
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "jotai": "^1.5.3",
+    "react": "^17.0.2"
+  },
+  "devDependencies": {
+    "@tsconfig/recommended": "^1.0.1",
+    "typescript": "^4.5.5"
+  }
 }
