@@ -1,5 +1,5 @@
 import Hjson from "hjson";
-import type { ModelParam } from "mgrcd-resource";
+import type { Model, ModelParam } from "mgrcd-resource";
 
 export async function* getModelDirectories(
   resourceDirectory: FileSystemDirectoryHandle,
@@ -47,7 +47,7 @@ export async function* getExModelFiles(
 export async function getModel(modelFile: FileSystemFileHandle) {
   return await modelFile.getFile()
     .then((file) => file.text())
-    .then((json) => JSON.parse(json));
+    .then((json) => JSON.parse(json) as Model);
 }
 
 export async function getModelParam(modelParamFile: FileSystemFileHandle) {
