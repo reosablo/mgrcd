@@ -34,7 +34,7 @@ export type Model = {
     Physics?: string;
     Pose?: string;
     Expressions?: Expression[];
-    motions?: Record<string, Motion[]>;
+    Motions?: Record<string, Motion[]>;
   };
   Groups?: Group[];
   HitAreas?: HitArea[];
