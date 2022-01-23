@@ -39,7 +39,7 @@ export type Motion = Live2DMotion & {
 
 export type Model = Live2DModel & {
   FileReferences: Live2DModel["FileReferences"] & {
-    Motions: Record<string, Motion[]>;
+    Motions?: Record<string, Motion[]>;
   };
   Controllers?: {
     MouseTracking?: Controller;
