@@ -3,5 +3,9 @@
   "name": "live2dviewerex",
   "version": "0.0.0",
   "description": "Live2DViewerEX data",
-  "license": "ISC"
+  "license": "ISC",
+  "types": "./types",
+  "files": [
+    "./types"
+  ]
 }
