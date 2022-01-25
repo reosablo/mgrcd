@@ -3,5 +3,16 @@
   "name": "mgrcd-live2dviewerex",
   "version": "0.0.0",
   "description": "Convert Magia Record Live2D models to be alive in Live2DViewerEX apps",
-  "license": "MPL-2.0"
+  "license": "MPL-2.0",
+  "main": "./dist",
+  "files": [
+    "./dist"
+  ],
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@tsconfig/recommended": "^1.0.1",
+    "typescript": "^4.5.5"
+  }
 }
