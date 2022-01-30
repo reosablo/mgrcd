@@ -2,6 +2,8 @@
   "extends": "@tsconfig/recommended/tsconfig.json",
   "compilerOptions": {
     "target": "ES2021",
+    "module": "ES2020",
+    "moduleResolution": "node",
     "lib": ["DOM", "DOM.Iterable", "ES2021"],
     "jsx": "react-jsx",
     "rootDir": "./src",

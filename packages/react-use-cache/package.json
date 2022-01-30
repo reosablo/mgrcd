@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "description": "React custom hook library to load anything with cache",
   "license": "ISC",
+  "type": "module",
   "main": "./dist",
   "files": [
     "./dist"
