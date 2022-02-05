@@ -29,6 +29,15 @@ export async function getModelParamFile(
     .getFileHandle("params.json");
 }
 
+export async function getExModelWritable(
+  modelDirectory: FileSystemDirectoryHandle,
+  exModelId: string,
+) {
+  return await modelDirectory
+    .getFileHandle(`model-${exModelId}.model3.json`, { create: true })
+    .then((file) => file.createWritable());
+}
+
 export async function* getExModelFiles(
   modelDirectory: FileSystemDirectoryHandle,
 ) {
@@ -48,6 +57,14 @@ export async function getModel(modelFile: FileSystemFileHandle) {
   return await modelFile.getFile()
     .then((file) => file.text())
     .then((json) => JSON.parse(json) as Model);
+}
+
+export async function setModel(
+  exModelWritable: FileSystemWritableFileStream,
+  model: Model,
+) {
+  const json = JSON.stringify(model, null, "\t");
+  await exModelWritable.write(json);
 }
 
 export async function getModelParam(modelParamFile: FileSystemFileHandle) {
