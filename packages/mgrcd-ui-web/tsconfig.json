@@ -16,5 +16,10 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["./src"]
+  "include": ["./src"],
+  "references": [
+    { "path": "../mgrcd-io-fsa" },
+    { "path": "../mgrcd-live2dviewerex" },
+    { "path": "../react-use-cache" }
+  ]
 }
