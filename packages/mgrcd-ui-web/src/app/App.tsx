@@ -49,7 +49,7 @@ export function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <BrowserRouter>
+      <BrowserRouter basename="/mgrcd">
         <Content />
       </BrowserRouter>
     </ThemeProvider>
