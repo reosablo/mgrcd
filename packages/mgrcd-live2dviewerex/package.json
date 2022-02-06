@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "description": "Convert Magia Record Live2D models to be alive in Live2DViewerEX apps",
   "license": "MPL-2.0",
+  "type": "module",
   "main": "./dist",
   "files": [
     "./dist"
