@@ -29,7 +29,11 @@ import {
   getModelParamFile,
   setModel,
 } from "mgrcd-io-fsa";
-import { installModelParam, installScenario } from "mgrcd-live2dviewerex";
+import {
+  installModelParam,
+  installScenario,
+  postprocessModel,
+} from "mgrcd-live2dviewerex";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import useModelDirectories from "./lib/io/useModelDirectories";
@@ -326,6 +330,7 @@ function ConfirmDialog() {
         otherRoleIds,
       });
       installModelParam(model, modelParam);
+      postprocessModel(model, roleId);
       const modelWritable = await getExModelWritable(
         modelDirectory,
         castEntries.length === 1 ? `${scenarioId}` : `${scenarioId}@${roleId}`,
