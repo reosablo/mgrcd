@@ -48,18 +48,3 @@ export async function getScenario(scenarioFile: FileSystemFileHandle) {
     .then((file) => file.text())
     .then((json) => JSON.parse(json) as Scenario);
 }
-
-export async function* getActorIds(scenario: Scenario) {
-  const actorIds = new Set<number | undefined>();
-  for (const story of Object.values(scenario.story ?? {})) {
-    for (const scene of story) {
-      for (const action of scene.chara ?? []) {
-        const actorId = action.id;
-        if (!actorIds.has(actorId)) {
-          yield actorId;
-          actorIds.add(actorId);
-        }
-      }
-    }
-  }
-}
