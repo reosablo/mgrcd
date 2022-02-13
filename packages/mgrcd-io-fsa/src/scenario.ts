@@ -1,9 +1,12 @@
-import type { Scenario } from "mgrcd-resource";
+import { parseScenario } from "mgrcd-resource";
+
+const generalScenarioDirectoryPath = ["scenario", "json", "general"] as const;
+const charaOneShotDirectoryPath = ["scenario", "json", "charaOneShot"] as const;
 
 export async function* getScenarioFiles(
   resourceDirectory: FileSystemDirectoryHandle,
 ) {
-  const scenarioDirectory = await ["scenario", "json", "general"].reduce(
+  const scenarioDirectory = await generalScenarioDirectoryPath.reduce(
     async (directory, name) => (await directory).getDirectoryHandle(name),
     Promise.resolve(resourceDirectory),
   );
@@ -22,11 +25,7 @@ export async function* getScenarioFiles(
 export async function* getCharaOneShotFiles(
   resourceDirectory: FileSystemDirectoryHandle,
 ) {
-  const charaOneShotDirectory = await [
-    "scenario",
-    "json",
-    "charaOneShot",
-  ].reduce(
+  const charaOneShotDirectory = await charaOneShotDirectoryPath.reduce(
     async (directory, name) => (await directory).getDirectoryHandle(name),
     Promise.resolve(resourceDirectory),
   );
@@ -46,5 +45,5 @@ export async function getScenario(scenarioFile: FileSystemFileHandle) {
   return await scenarioFile
     .getFile()
     .then((file) => file.text())
-    .then((json) => JSON.parse(json) as Scenario);
+    .then((data) => parseScenario(data));
 }

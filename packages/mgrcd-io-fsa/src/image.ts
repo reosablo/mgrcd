@@ -1,7 +1,10 @@
+const cardImageDirectoryPath = ["image_native", "card", "image"] as const;
+const miniImageDirectoryPath = ["image_native", "mini", "image"] as const;
+
 export async function* getCardImageFiles(
   resourceDirectory: FileSystemDirectoryHandle,
 ) {
-  const cardImageDirectory = await ["image_native", "card", "image"].reduce(
+  const cardImageDirectory = await cardImageDirectoryPath.reduce(
     async (directory, name) => (await directory).getDirectoryHandle(name),
     Promise.resolve(resourceDirectory),
   );
@@ -20,7 +23,7 @@ export async function* getCardImageFiles(
 export async function* getMiniImageFiles(
   resourceDirectory: FileSystemDirectoryHandle,
 ) {
-  const miniImageDirectory = await ["image_native", "mini", "image"].reduce(
+  const miniImageDirectory = await miniImageDirectoryPath.reduce(
     async (directory, name) => (await directory).getDirectoryHandle(name),
     Promise.resolve(resourceDirectory),
   );

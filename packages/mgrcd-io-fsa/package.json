@@ -12,9 +12,6 @@
   "scripts": {
     "build": "tsc"
   },
-  "dependencies": {
-    "hjson": "^3.2.2"
-  },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.1",
     "@types/hjson": "^2.4.3",

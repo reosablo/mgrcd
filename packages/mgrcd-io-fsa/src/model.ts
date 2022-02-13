@@ -1,14 +1,22 @@
-import Hjson from "hjson";
-import type { Model, ModelParam } from "mgrcd-resource";
+import {
+  Model,
+  parseModel,
+  parseModelParam,
+  stringifyModel,
+} from "mgrcd-resource";
+
+const modelDirectoryRootPath = ["image_native", "live2d_v4"] as const;
+const modelFilename = "model.model3.json" as const;
+const modelParamFilename = "params.json" as const;
 
 export async function* getModelDirectories(
   resourceDirectory: FileSystemDirectoryHandle,
 ) {
-  const scenarioDirectory = await ["image_native", "live2d_v4"].reduce(
+  const modelDirectory = await modelDirectoryRootPath.reduce(
     async (directory, name) => (await directory).getDirectoryHandle(name),
     Promise.resolve(resourceDirectory),
   );
-  for await (const [name, entry] of scenarioDirectory.entries()) {
+  for await (const [name, entry] of modelDirectory.entries()) {
     const id = name.match(/^(?<id>\d{6})$/)?.groups?.id;
     if (id !== undefined && entry instanceof FileSystemDirectoryHandle) {
       const modelId = +id;
@@ -18,15 +26,13 @@ export async function* getModelDirectories(
 }
 
 export async function getModelFile(modelDirectory: FileSystemDirectoryHandle) {
-  return await modelDirectory
-    .getFileHandle("model.model3.json");
+  return await modelDirectory.getFileHandle(modelFilename);
 }
 
 export async function getModelParamFile(
   modelDirectory: FileSystemDirectoryHandle,
 ) {
-  return await modelDirectory
-    .getFileHandle("params.json");
+  return await modelDirectory.getFileHandle(modelParamFilename);
 }
 
 export async function getExModelWritable(
@@ -56,25 +62,19 @@ export async function* getExModelFiles(
 export async function getModel(modelFile: FileSystemFileHandle) {
   return await modelFile.getFile()
     .then((file) => file.text())
-    .then((json) => JSON.parse(json) as Model);
+    .then((data) => parseModel(data));
 }
 
 export async function setModel(
   exModelWritable: FileSystemWritableFileStream,
   model: Model,
 ) {
-  const json = JSON.stringify(model, null, "\t");
+  const json = stringifyModel(model, "\t");
   await exModelWritable.write(json);
 }
 
 export async function getModelParam(modelParamFile: FileSystemFileHandle) {
   return await modelParamFile.getFile()
     .then((file) => file.text())
-    .then((json) => {
-      try {
-        return JSON.parse(json) as ModelParam;
-      } catch {
-        return Hjson.parse(json) as ModelParam;
-      }
-    });
+    .then((data) => parseModelParam(data));
 }
