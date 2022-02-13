@@ -281,7 +281,7 @@ function buildCommand(
   actions: Action[],
   resolver: Resolver,
 ) {
-  const commands = ["parameters unlock"];
+  const commands = [] as string[];
   for (const action of actions) {
     if (resolver.getRoleId(action.id) !== roleId) {
       continue;
@@ -313,7 +313,11 @@ function buildCommand(
     }
     if (lipSynch !== undefined) {
       if (lipSynch) {
-        commands.push(`unmute_sound 0`, `lip_sync enable`);
+        commands.push(
+          `unmute_sound 0`,
+          `lip_sync enable`,
+          `parameters unlock ParamMouthOpenY`,
+        );
       } else {
         if (actions.some((action) => action.lipSynch)) {
           commands.push(`mute_sound 0`);
@@ -329,26 +333,45 @@ function buildCommand(
       commands.push(`parameters lock ParamCheek ${cheek}`);
     }
     if (eyeClose !== undefined) {
-      commands.push(
-        `parameters lock ParamEyeLOpen ${1 - eyeClose}`,
-        `parameters lock ParamEyeROpen ${1 - eyeClose}`,
-      );
+      if (eyeClose === 0) {
+        commands.push(
+          `parameters unlock ParamEyeLOpen`,
+          `parameters unlock ParamEyeROpen`,
+        );
+      } else {
+        commands.push(
+          `parameters lock ParamEyeLOpen ${1 - eyeClose}`,
+          `parameters lock ParamEyeROpen ${1 - eyeClose}`,
+        );
+      }
     }
     if (mouthOpen !== undefined) {
-      commands.push(`parameters lock ParamMouthOpenY ${mouthOpen}`);
+      if (mouthOpen === 0) {
+        commands.push(`parameters unlock ParamMouthOpenY`);
+      } else {
+        commands.push(`parameters lock ParamMouthOpenY ${mouthOpen}`);
+      }
     }
     if (soulGem !== undefined) {
-      commands.push(`parameters lock ParamSoulgem ${soulGem}`);
+      if (soulGem === 1) {
+        commands.push(`parameters unlock ParamSoulgem`);
+      } else {
+        commands.push(`parameters lock ParamSoulgem ${soulGem}`);
+      }
     }
     if (tear !== undefined) {
-      commands.push(`parameters lock ParamTear ${tear}`);
+      if (tear === 0) {
+        commands.push(`parameters unlock ParamTear`);
+      } else {
+        commands.push(`parameters lock ParamTear ${tear}`);
+      }
     }
-    if (live2dParam?.name !== undefined && live2dParam?.value !== undefined) {
+    if (live2dParam?.name !== undefined) {
       const name = live2dParam.name.replace(
         /_?([A-Za-z]+)/g,
         (_, $1: string) => `${$1[0].toUpperCase()}${$1.slice(1).toLowerCase()}`,
       );
-      commands.push(`parameters lock ${name} ${live2dParam.value}`);
+      commands.push(`parameters lock ${name} ${live2dParam.value ?? 0}`);
     }
     if (textHomeStatus === "Clear") {
       commands.push(`hide_text`);
