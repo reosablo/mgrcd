@@ -1,4 +1,3 @@
-import type { Model } from "live2dviewerex";
 import type { Scenario } from "mgrcd-resource";
 import type { Resolver as ResolverType } from "./install";
 
@@ -208,25 +207,6 @@ export class Resolver implements ResolverType {
       }
     }
   }
-}
-
-export function postprocessModel(model: Model) {
-  const controllers = model.Controllers ??= {};
-  const options = model.Options ??= {};
-  const intimacyMaxValue = Object.values(model.FileReferences.Motions ?? {})
-    .flat()
-    .reduce(
-      (intimacyMaxValue, motion) =>
-        motion.Intimacy?.Min
-          ? Math.max(intimacyMaxValue ?? 0, motion.Intimacy.Min)
-          : intimacyMaxValue,
-      undefined as number | undefined,
-    );
-  controllers.IntimacySystem = {
-    Enabled: true,
-    MaxValue: intimacyMaxValue,
-  };
-  options.AnisoLevel = 2;
 }
 
 export function patchScenario(scenario: Scenario, scenarioId: string) {
