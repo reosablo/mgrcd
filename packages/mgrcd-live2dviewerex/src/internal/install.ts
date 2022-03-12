@@ -7,8 +7,11 @@ export function installStory(
   model: Model,
   story: Story,
   storyId: string,
-  roleId: number,
   resolver: Resolver,
+  { enableMute, filterRoleId }: {
+    enableMute: boolean;
+    filterRoleId: (roleId: number | undefined) => boolean;
+  },
 ) {
   for (const [sceneIndex, scene] of story.entries()) {
     const motionIndex = resolver.getMotionIndex("scene", storyId, sceneIndex);
@@ -21,10 +24,11 @@ export function installStory(
       : scene.autoTurnLast !== undefined
       ? scene.autoTurnLast * 1000
       : undefined;
-    const actions = scene.chara ?? [];
-    const command = buildCommand(roleId, actions, resolver);
-    const text = buildText(roleId, actions, resolver);
-    installDependencies(model, roleId, actions, resolver);
+    const actions = scene.chara
+      ?.filter((action) => filterRoleId(action.id)) ?? [];
+    const command = buildCommand(actions, resolver, { enableMute });
+    const text = buildText(actions);
+    installDependencies(model, actions, resolver);
     installMotion(model, motionGroupName, {
       Name: motionName,
       MotionDuration: motionDuration,
@@ -168,18 +172,14 @@ export function uninstallMotion(
 }
 
 export function buildStoryEntryCommand(
-  roleId: number,
-  roleIds: Iterable<number | undefined> | undefined,
   motionIndex: MotionIndex,
   resolver: Resolver,
+  { otherRoleIds }: { otherRoleIds: Iterable<number> },
 ) {
   const motionRef = stringifyMotionIndex(motionIndex);
   const commands = [`start_mtn ${motionRef}`];
-  for (const rid of roleIds ?? []) {
-    if (rid === roleId || rid === undefined) {
-      continue;
-    }
-    commands.push(`start_mtn ${resolver.getModelId(rid)} ${motionRef}`);
+  for (const otherRoleId of otherRoleIds) {
+    commands.push(`start_mtn ${resolver.getModelId(otherRoleId)} ${motionRef}`);
   }
   return commands.join(";");
 }
@@ -192,41 +192,37 @@ export type Resolver = {
   getMotionIndex(
     ...args:
       | [type: "scene", storyId: string, sceneIndex: number]
-      | [type: "motion", roleId: number | undefined, motion: number]
-      | [type: "voice", roleId: number | undefined, voice: string]
-      | [type: "voiceFull", roleId: number | undefined, voiceFull: string]
-      | [type: "face", roleId: number | undefined, face: string]
+      | [type: "motion", motion: number]
+      | [type: "voice", voice: string]
+      | [type: "voiceFull", voiceFull: string]
+      | [type: "face", face: string]
   ): MotionIndex;
 
   getExpressionName(
-    ...args: [type: "face", roleId: number | undefined, face: string]
+    ...args: [type: "face", face: string]
   ): string;
 
   getFilePath(
     ...args:
-      | [type: "motion", roleId: number | undefined, motion: number]
-      | [type: "voice", roleId: number | undefined, voice: string]
-      | [type: "voiceFull", roleId: number | undefined, voiceFull: string]
-      | [type: "face", roleId: number | undefined, face: string]
+      | [type: "motion", motion: number]
+      | [type: "voice", voice: string]
+      | [type: "voiceFull", voiceFull: string]
+      | [type: "face", face: string]
   ): string;
 };
 
 function installDependencies(
   model: Model,
-  roleId: number,
   actions: Iterable<Action>,
   resolver: Resolver,
 ) {
   for (const action of actions) {
-    if (resolver.getRoleId(action.id) !== roleId) {
-      continue;
-    }
     const { motion, face, voice } = action;
     if (motion !== undefined) {
-      const motionIndex = resolver.getMotionIndex("motion", roleId, motion);
+      const motionIndex = resolver.getMotionIndex("motion", motion);
       if (!isMotionInstalled(model, motionIndex)) {
         const [motionGroupName, motionName] = motionIndex;
-        const filePath = resolver.getFilePath("motion", roleId, motion);
+        const filePath = resolver.getFilePath("motion", motion);
         if (motion < 100) {
           installMotion(model, motionGroupName, {
             Name: motionName,
@@ -245,8 +241,8 @@ function installDependencies(
       }
     }
     if (face !== undefined) {
-      const motionIndex = resolver.getMotionIndex("face", roleId, face);
-      const expressionName = resolver.getExpressionName("face", roleId, face);
+      const motionIndex = resolver.getMotionIndex("face", face);
+      const expressionName = resolver.getExpressionName("face", face);
       if (!isMotionInstalled(model, motionIndex)) {
         const [motionGroupName, motionName] = motionIndex;
         installMotion(model, motionGroupName, {
@@ -255,7 +251,7 @@ function installDependencies(
         });
       }
       if (!isExpressionInstalled(model, expressionName)) {
-        const filePath = resolver.getFilePath("face", roleId, face);
+        const filePath = resolver.getFilePath("face", face);
         installExpression(model, {
           Name: expressionName,
           File: filePath,
@@ -263,10 +259,10 @@ function installDependencies(
       }
     }
     if (voice !== undefined) {
-      const motionIndex = resolver.getMotionIndex("voice", roleId, voice);
+      const motionIndex = resolver.getMotionIndex("voice", voice);
       if (!isMotionInstalled(model, motionIndex)) {
         const [motionGroupName, motionName] = motionIndex;
-        const filePath = resolver.getFilePath("voice", roleId, voice);
+        const filePath = resolver.getFilePath("voice", voice);
         installMotion(model, motionGroupName, {
           Name: motionName,
           Sound: filePath,
@@ -277,15 +273,12 @@ function installDependencies(
 }
 
 function buildCommand(
-  roleId: number,
   actions: Action[],
   resolver: Resolver,
+  { enableMute }: { enableMute: boolean },
 ) {
   const commands = [] as string[];
   for (const action of actions) {
-    if (resolver.getRoleId(action.id) !== roleId) {
-      continue;
-    }
     const {
       motion,
       face,
@@ -300,32 +293,35 @@ function buildCommand(
       textHomeStatus,
     } = action;
     if (motion !== undefined) {
-      const motionIndex = resolver.getMotionIndex("motion", roleId, motion);
+      const motionIndex = resolver.getMotionIndex("motion", motion);
       commands.push(`start_mtn ${stringifyMotionIndex(motionIndex)}`);
     }
     if (face !== undefined) {
-      const motionIndex = resolver.getMotionIndex("face", roleId, face);
+      const motionIndex = resolver.getMotionIndex("face", face);
       commands.push(`start_mtn ${stringifyMotionIndex(motionIndex)}`);
     }
     if (voice !== undefined) {
-      const motionIndex = resolver.getMotionIndex("voice", roleId, voice);
+      const motionIndex = resolver.getMotionIndex("voice", voice);
       commands.push(`start_mtn ${stringifyMotionIndex(motionIndex)}`);
     }
     if (lipSynch !== undefined) {
       if (lipSynch) {
-        commands.push(
-          `unmute_sound 0`,
-          `lip_sync enable`,
-          `parameters unlock ParamMouthOpenY`,
-        );
+        if (enableMute) {
+          commands.push(`unmute_sound 0`);
+        } else {
+          commands.push(`lip_sync enable`);
+          if (mouthOpen === undefined) {
+            commands.push(`parameters unlock ParamMouthOpenY`);
+          }
+        }
       } else {
-        if (actions.some((action) => action.lipSynch)) {
+        if (enableMute) {
           commands.push(`mute_sound 0`);
         } else {
-          commands.push(
-            `lip_sync disable`,
-            `parameters lock ParamMouthOpenY 0`,
-          );
+          commands.push(`lip_sync disable`);
+          if (mouthOpen === undefined) {
+            commands.push(`parameters lock ParamMouthOpenY 0`);
+          }
         }
       }
     }
@@ -380,16 +376,9 @@ function buildCommand(
   return commands.join(";") || undefined;
 }
 
-function buildText(
-  roleId: number,
-  actions: Iterable<Action>,
-  resolver: Resolver,
-) {
+function buildText(actions: Iterable<Action>) {
   const texts = [] as string[];
   for (const action of actions) {
-    if (resolver.getRoleId(action.id) !== roleId) {
-      continue;
-    }
     const { textHome } = action;
     if (textHome !== undefined) {
       const text = textHome

@@ -14,16 +14,24 @@ import {
 const filteredEntryMotions = originalEntryMotions
   .filter(([, motion]) => !motion[entryMotionMetaKey].spoiler);
 
+const installScenarioDefaultOption = {
+  allowSpoiler: false as boolean,
+  enableMute: false as boolean,
+  filterRoleId: (roleId: number | undefined) => roleId !== undefined,
+  otherRoleIds: [] as Iterable<number>,
+} as const;
+
 export function installScenario(
   model: Model,
   scenario: Scenario,
-  roleId: number,
-  option?: {
-    allowSpoiler?: boolean;
-    otherRoleIds?: Iterable<number | undefined>;
-  },
+  option?: Partial<typeof installScenarioDefaultOption>,
 ) {
-  const { allowSpoiler, otherRoleIds } = option ?? {};
+  const {
+    allowSpoiler,
+    enableMute,
+    filterRoleId,
+    otherRoleIds,
+  } = { ...installScenarioDefaultOption, ...option };
   const stories = scenario.story;
   if (stories === undefined) {
     return;
@@ -44,14 +52,9 @@ export function installScenario(
     const motionIndex = resolver.getMotionIndex("scene", storyId, 0);
     const motion: Motion = {
       ...entryMotion,
-      Command: buildStoryEntryCommand(
-        roleId,
-        otherRoleIds,
-        motionIndex,
-        resolver,
-      ),
+      Command: buildStoryEntryCommand(motionIndex, resolver, { otherRoleIds }),
     };
     installMotion(model, motionGroupName, motion);
-    installStory(model, story, storyId, roleId, resolver);
+    installStory(model, story, storyId, resolver, { enableMute, filterRoleId });
   }
 }

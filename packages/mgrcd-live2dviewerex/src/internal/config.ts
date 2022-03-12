@@ -147,26 +147,25 @@ export class Resolver implements ResolverType {
   }
 
   getMotionIndex(...args: Parameters<ResolverType["getMotionIndex"]>) {
-    const [type] = args;
-    switch (type) {
+    switch (args[0]) {
       case "scene": {
         const [, storyId, sceneIndex] = args;
         return [`Story#1`, `${storyId}_${sceneIndex + 1}`] as const;
       }
       case "motion": {
-        const [, _roleId, motion] = args;
+        const [, motion] = args;
         return [`Motion#2`, `${motion}`] as const;
       }
       case "voice": {
-        const [, _roleId, voice] = args;
+        const [, voice] = args;
         return [`Voice#3`, voice] as const;
       }
       case "voiceFull": {
-        const [, _roleId, voiceFull] = args;
+        const [, voiceFull] = args;
         return [`VoiceFull#3`, voiceFull] as const;
       }
       case "face": {
-        const [, _roleId, face] = args;
+        const [, face] = args;
         const expressionId = extractExpressionId(face);
         return [
           `Face#4`,
@@ -179,7 +178,7 @@ export class Resolver implements ResolverType {
   getExpressionName(...args: Parameters<ResolverType["getExpressionName"]>) {
     switch (args[0]) {
       case "face": {
-        const [_type, _roleId, face] = args;
+        const [_type, face] = args;
         return patchFace(face);
       }
     }
@@ -188,21 +187,21 @@ export class Resolver implements ResolverType {
   getFilePath(...args: Parameters<ResolverType["getFilePath"]>) {
     switch (args[0]) {
       case "motion": {
-        const [_type, _roleId, motion] = args;
+        const [, motion] = args;
         return `mtn/motion_${
           motion.toString().padStart(3, "0")
         }.motion3.json` as const;
       }
       case "face": {
-        const [_type, _roleId, face] = args;
+        const [, face] = args;
         return `exp/${patchFace(face)}` as const;
       }
       case "voice": {
-        const [_type, _roleId, voice] = args;
+        const [, voice] = args;
         return `../../../sound_native/voice/${voice}_hca.mp3` as const;
       }
       case "voiceFull": {
-        const [_type, _roleId, voiceFull] = args;
+        const [, voiceFull] = args;
         return `../../../sound_native/${voiceFull}_hca.mp3` as const;
       }
     }
