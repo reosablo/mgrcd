@@ -3,7 +3,7 @@ import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import ModelInfo from "./lib/ModelInfo";
 import NavigationLayout from "./lib/NavigationLayout";
-import useModelIds from "./lib/useModelds";
+import useModelIds from "./lib/useModelIds";
 import useResourceDirectory from "./lib/useResourceDirectory";
 
 export function ModelList() {

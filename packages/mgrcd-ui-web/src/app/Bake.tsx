@@ -40,7 +40,7 @@ import useModelDirectories from "./lib/io/useModelDirectories";
 import ListLayout from "./lib/ListLayout";
 import ModelInfo from "./lib/ModelInfo";
 import ModelList from "./lib/ModelList";
-import useModelIds from "./lib/useModelds";
+import useModelIds from "./lib/useModelIds";
 import useResourceDirectory from "./lib/useResourceDirectory";
 import useRoleIds from "./lib/useRoleIds";
 import useScenario from "./lib/useScenario";
