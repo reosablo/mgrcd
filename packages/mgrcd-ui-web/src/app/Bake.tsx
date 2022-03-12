@@ -58,6 +58,7 @@ type BakeLocationState =
   | undefined;
 
 function Cast(props: { scenarioId?: number }) {
+  const location = useLocation();
   const navigate = useNavigate();
   const { scenarioId } = props;
   const [resourceDirectory] = useResourceDirectory();
@@ -160,7 +161,7 @@ function Cast(props: { scenarioId?: number }) {
         },
       },
     ],
-    [navigate],
+    [location, navigate],
   );
   const rows = useMemo(
     () =>
