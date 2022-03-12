@@ -320,14 +320,21 @@ function ConfirmDialog() {
       if (modelDirectory === undefined) {
         throw new Error(`modelDirectory is undefined`);
       }
+      const familyId = roleId - roleId % 100;
+      const targetRoleIds = roleIds.includes(familyId)
+        ? [roleId]
+        : [roleId, familyId];
       const otherRoleIds = new Set(roleIds);
       otherRoleIds.delete(roleId);
       const [model, modelParam] = await Promise.all([
         getModelFile(modelDirectory).then((file) => getModel(file)),
         getModelParamFile(modelDirectory).then((file) => getModelParam(file)),
       ]);
-      installScenario(model, scenario, roleId, {
+      installScenario(model, scenario, {
         allowSpoiler,
+        enableMute: otherRoleIds.size > 0,
+        filterRoleId: (roleId) =>
+          (targetRoleIds as (number | undefined)[]).includes(roleId),
         otherRoleIds,
       });
       installModelParam(model, modelParam);
