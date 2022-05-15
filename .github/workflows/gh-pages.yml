@@ -16,6 +16,9 @@ jobs:
         with:
           submodules: true
 
+      - name: Fetch submodules
+        run: git submodule update --init
+
       - name: Setup Node
         uses: actions/setup-node@v2
         with:
