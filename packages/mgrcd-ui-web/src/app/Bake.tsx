@@ -1,3 +1,4 @@
+import corePath from "@ffmpeg/core/dist/ffmpeg-core.js?url";
 import { Announcement, ChevronRight } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
 import {
@@ -21,6 +22,7 @@ import {
   Typography,
 } from "@mui/material";
 import { DataGrid, GridColumns, GridRenderCellParams } from "@mui/x-data-grid";
+import { HCA } from "hca.js/lib/hca";
 import {
   getExModelWritable,
   getModel,
@@ -37,6 +39,7 @@ import {
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import useModelDirectories from "./lib/io/useModelDirectories";
+import useVoiceDirectory from "./lib/io/useVoiceDirectory";
 import ListLayout from "./lib/ListLayout";
 import ModelInfo from "./lib/ModelInfo";
 import ModelList from "./lib/ModelList";
@@ -276,6 +279,7 @@ function SelectModelDialog() {
 function ConfirmDialog() {
   const [resourceDirectory] = useResourceDirectory();
   const [modelDirectories] = useModelDirectories(resourceDirectory);
+  const [voiceDirectory] = useVoiceDirectory(resourceDirectory);
   const location = useLocation();
   const state = location.state as BakeLocationState;
   const navigate = useNavigate();
@@ -315,6 +319,7 @@ function ConfirmDialog() {
     }
     setTriggered(true);
     const roleIds = castEntries.map(([roleId]) => roleId);
+    const voiceIds = new Set<string>();
     Promise.all(castEntries.map(async ([roleId, modelId]) => {
       const modelDirectory = modelDirectories?.[modelId];
       if (modelDirectory === undefined) {
@@ -351,7 +356,52 @@ function ConfirmDialog() {
         await modelWritable.abort();
         throw error;
       }
+      const voicePattern = /^(\.\.\/){3}sound_native\/voice\/(?<id>[^/]+)\.mp3/;
+      Object.values(model.FileReferences.Motions ?? {})
+        .flatMap((motions) =>
+          motions.flatMap(({ Sound }) => Sound !== undefined ? [Sound] : [])
+        )
+        .map((voicePath) => voicePath.match(voicePattern)?.groups?.id)
+        .filter((voiceId): voiceId is string => voiceId !== undefined)
+        .forEach((sound) => voiceIds.add(sound));
     }))
+      .then(async () => {
+        if (voiceDirectory === undefined) {
+          throw new Error("voice directory not found");
+        }
+        const { createFFmpeg } = await import("@ffmpeg/ffmpeg");
+        const ffmpeg = createFFmpeg({ corePath });
+        await ffmpeg.load();
+        await Promise.all([...voiceIds].map(async (voiceId) => {
+          const mp3Exists = await voiceDirectory.getFileHandle(`${voiceId}.mp3`)
+            .then(() => true, () => false);
+          if (mp3Exists) {
+            return;
+          }
+          const [mp3Bytes, mp3Writable] = await Promise.all([
+            voiceDirectory.getFileHandle(`${voiceId}.hca`)
+              .then((handle) => handle.getFile())
+              .then((file) => file.arrayBuffer())
+              .then((buffer) => new Uint8Array(buffer))
+              .then((hcaBytes) => HCA.decrypt(hcaBytes, "defaultkey"))
+              .then((hcaBytes) => HCA.decode(hcaBytes))
+              .then((wavBytes) =>
+                ffmpeg.FS("writeFile", `${voiceId}.wav`, wavBytes)
+              )
+              .then(() => ffmpeg.run("-i", `${voiceId}.wav`, `${voiceId}.mp3`))
+              .then(() => ffmpeg.FS("readFile", `${voiceId}.mp3`)),
+            voiceDirectory.getFileHandle(`${voiceId}.mp3`, { create: true })
+              .then((handle) => handle.createWritable()),
+          ]);
+          try {
+            await mp3Writable.write(mp3Bytes);
+            await mp3Writable.close();
+          } catch (error) {
+            await mp3Writable.abort();
+            throw error;
+          }
+        }));
+      })
       .then(() => ({
         severity: "success",
         message: "succeeded to generate models",
@@ -368,6 +418,7 @@ function ConfirmDialog() {
     navigate,
     scenario,
     scenarioId,
+    voiceDirectory,
   ]);
 
   return (
